@@ -5,9 +5,13 @@ import java.awt.TrayIcon.MessageType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -20,6 +24,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
 public class RestValidationHandler {
+    
+    private MessageSource messageSource;
+    @Autowired
+    public RestValidationHandler(MessageSource messageSource) {
+            this.messageSource = messageSource;
+    }
         // method to handle validation error
         @ExceptionHandler(MethodArgumentNotValidException.class)
         @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -57,9 +67,12 @@ public class RestValidationHandler {
                 FieldValidationError fieldValidationError =
                                                 new FieldValidationError();
                 if (error != null) {
+                    Locale currentLocale = LocaleContextHolder.getLocale();
+                    String msg = messageSource.getMessage(
+                            error.getDefaultMessage(), null, currentLocale);
                         fieldValidationError.setFiled(error.getField());
                         fieldValidationError.setType(MessageType.ERROR);
-                        fieldValidationError.setMessage(error.getDefaultMessage());
+                        fieldValidationError.setMessage(msg);
                 }
                 return fieldValidationError;
         }
